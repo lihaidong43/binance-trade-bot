@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, String, func, or_, select
-from sqlalchemy.orm import column_property, relationship
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, Boolean
+from sqlalchemy.orm import relationship
 
 from .base import Base
 from .coin import Coin
@@ -18,13 +18,7 @@ class Pair(Base):
 
     ratio = Column(Float)
 
-    stmt = select(func.count(Coin.symbol)).where(func.count(Coin.symbol) == 2)
-
-    enabled = column_property(
-        stmt.where(or_(Coin.symbol == from_coin_id, Coin.symbol == to_coin_id))
-        .where(Coin.enabled.is_(True))
-        .scalar_subquery()
-    )
+    enabled = Column(Boolean, default=True)
 
     def __init__(self, from_coin: Coin, to_coin: Coin, ratio=None):
         self.from_coin = from_coin
