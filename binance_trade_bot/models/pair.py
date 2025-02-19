@@ -18,9 +18,10 @@ class Pair(Base):
 
     ratio = Column(Float)
 
+    stmt = select(func.count(Coin.symbol)).where(func.count(Coin.symbol) == 2)
+
     enabled = column_property(
-        select([func.count(Coin.symbol) == 2])
-        .where(or_(Coin.symbol == from_coin_id, Coin.symbol == to_coin_id))
+        stmt.where(or_(Coin.symbol == from_coin_id, Coin.symbol == to_coin_id))
         .where(Coin.enabled.is_(True))
         .scalar_subquery()
     )
