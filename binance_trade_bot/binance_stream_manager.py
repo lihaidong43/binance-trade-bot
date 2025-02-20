@@ -152,13 +152,13 @@ class BinanceStreamManager:
                         self.logger.debug("Connect for userdata arrived", False)
                         self._fetch_pending_orders()
                         self._invalidate_balances()
-            if stream_data is not False:
+            if stream_data is not False and stream_data is not None:
                 self._process_stream_data(stream_data)
             if stream_data is False and stream_signal is False:
                 time.sleep(0.01)
 
     def _process_stream_data(self, stream_data):
-        event_type = stream_data["event_type"]
+        event_type = stream_data.get("event_type")  # 使用 get 方法避免 KeyError
         if event_type == "executionReport":  # !userData
             self.logger.debug(f"execution report: {stream_data}")
             order = BinanceOrder(stream_data)

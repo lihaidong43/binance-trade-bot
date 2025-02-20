@@ -1,0 +1,25 @@
+{
+    "apps": [
+      {
+        "name": "binance_trade_bot",
+        "script": "python3",
+        "args": "-m binance_trade_bot",
+        "interpreter": "none", 
+        "env": {
+          "PYTHONUNBUFFERED": "1"
+        }
+    },
+      {
+        "name": "binance_api_server",  
+        "script": "gunicorn",
+        "args": "binance_trade_bot.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5123",
+        "interpreter": "python3",
+        "instances": 1,
+        "exec_mode": "fork",
+        "watch": false,
+        "env": {
+          "NODE_ENV": "production"
+        }
+      }
+    ]
+  }
