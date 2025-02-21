@@ -254,9 +254,6 @@ class BinanceAPIManager:
         """
         # 检查 origin_symbol 的状态
         origin_symbol = origin_coin.symbol
-        if not self.is_symbol_valid(origin_symbol):
-            self.logger.info(f"Skipping buy... {origin_symbol} is not in a valid state")
-            return None
 
         trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
         target_symbol = target_coin.symbol
@@ -274,6 +271,11 @@ class BinanceAPIManager:
         order_quantity_s = "{:0.0{}f}".format(order_quantity, pair_info["baseAssetPrecision"])
 
         self.logger.info(f"BUY QTY {order_quantity}")
+
+
+        if not self.is_symbol_valid(origin_symbol + target_symbol):
+            self.logger.info(f"Skipping buy... {origin_symbol} is not in a valid state")
+            return None
 
         # Try to buy until successful
         order = None
@@ -306,27 +308,27 @@ class BinanceAPIManager:
 
         return order
 
-    def is_symbol_valid(self, symbol: str) -> bool:
+    def is_symbol_valid(self, pair: str) -> bool:
         """
         Check if the symbol is in a valid state for trading.
         """
         try:
             # 获取交易对信息
-            symbol_info = self.binance_client.get_symbol_info(symbol)
+            symbol_info = self.binance_client.get_symbol_info(pair)
             
             # 检查交易对信息是否存在
             if symbol_info is None:
-                self.logger.info(f"Symbol {symbol} information could not be retrieved.")
+                self.logger.info(f"Symbol {pair} information could not be retrieved.")
                 return False
             
             # 检查交易对是否存在并且状态为 TRADING
             if symbol_info['status'] == 'TRADING':
                 return True
             else:
-                self.logger.info(f"Symbol {symbol} is not in a valid trading state: {symbol_info['status']}")
+                self.logger.info(f"Symbol {pair} is not in a valid trading state: {symbol_info['status']}")
                 return False
         except Exception as e:
-            self.logger.warning(f"Error checking symbol status for {symbol}: {e}")
+            self.logger.warning(f"Error checking symbol status for {pair}: {e}")
             return False
 
     def sell_alt(self, origin_coin: Coin, target_coin: Coin) -> BinanceOrder:
