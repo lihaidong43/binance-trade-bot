@@ -252,8 +252,13 @@ class BinanceAPIManager:
         """
         Buy altcoin
         """
-        trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
+        # 检查 origin_symbol 的状态
         origin_symbol = origin_coin.symbol
+        if not self.is_symbol_valid(origin_symbol):
+            self.logger.info(f"Skipping buy... {origin_symbol} is not in a valid state")
+            return None
+
+        trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
         target_symbol = target_coin.symbol
 
         with self.cache.open_balances() as balances:
@@ -300,6 +305,24 @@ class BinanceAPIManager:
         trade_log.set_complete(order.cumulative_quote_qty)
 
         return order
+
+    def is_symbol_valid(self, symbol: str) -> bool:
+        """
+        Check if the symbol is in a valid state for trading.
+        """
+        try:
+            # 获取交易对信息
+            symbol_info = self.binance_client.get_symbol_info(symbol)
+            
+            # 检查交易对是否存在并且状态为 TRADING
+            if symbol_info and symbol_info['status'] == 'TRADING':
+                return True
+            else:
+                self.logger.info(f"Symbol {symbol} is not in a valid trading state: {symbol_info['status']}")
+                return False
+        except Exception as e:
+            self.logger.warning(f"Error checking symbol status for {symbol}: {e}")
+            return False
 
     def sell_alt(self, origin_coin: Coin, target_coin: Coin) -> BinanceOrder:
         return self.retry(self._sell_alt, origin_coin, target_coin)
