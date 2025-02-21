@@ -314,8 +314,13 @@ class BinanceAPIManager:
             # 获取交易对信息
             symbol_info = self.binance_client.get_symbol_info(symbol)
             
+            # 检查交易对信息是否存在
+            if symbol_info is None:
+                self.logger.info(f"Symbol {symbol} information could not be retrieved.")
+                return False
+            
             # 检查交易对是否存在并且状态为 TRADING
-            if symbol_info and symbol_info['status'] == 'TRADING':
+            if symbol_info['status'] == 'TRADING':
                 return True
             else:
                 self.logger.info(f"Symbol {symbol} is not in a valid trading state: {symbol_info['status']}")
